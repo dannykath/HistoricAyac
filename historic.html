@@ -1,0 +1,1941 @@
+<!DOCTYPE html>
+<html>
+  <head>
+      <meta charset='utf-8' />
+      <title>Zonas arqueológicas e históricas</title>
+      <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+      <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700' rel='stylesheet'>
+      <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.js'></script>
+      <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.css' rel='stylesheet' />
+      <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.0.0/mapbox-gl-directions.js'></script>
+      <style>
+
+		#marker {
+		    background-image: url('https://image.freepik.com/free-icon/user-location-mark_318-39506.jpg');
+		    background-size: cover;
+		    width: 50px;
+		    height: 50px;
+		    border-radius: 50%;
+		    cursor: pointer;
+			}
+
+
+        body {
+          color:#404040;
+          font:400 15px/22px 'Source Sans Pro', 'Helvetica Neue', Sans-serif;
+          margin:0;
+          padding:0;
+          -webkit-font-smoothing:antialiased;
+        }
+
+        * {
+          -webkit-box-sizing:border-box;
+          -moz-box-sizing:border-box;
+          box-sizing:border-box;
+        }
+
+        .sidebar {
+          position:absolute;
+          width:25%;
+          height:100%;
+          top:0;
+          overflow:hidden;
+          border-right:1px solid rgba(0,0,0,0.25);
+        }
+
+        .pad2 {
+          padding:20px;
+        }
+
+        .map {
+          position:absolute;
+          left:25%;
+          width:75%;
+          top:0;bottom:0;
+        }
+
+        h1 {
+          font-size:22px;
+          margin:0;
+          font-weight:400;
+          line-height: 20px;
+          padding: 20px 2px;
+        }
+
+        a {
+          color:#404040;
+          text-decoration:none;
+        }
+
+        a:hover {
+          color:#101010;
+        }
+
+        .heading {
+          background:#fff;
+          border-bottom:1px solid #eee;
+          min-height:80px;
+          line-height:60px;
+          padding:20px;
+          background-color: #00853e;
+          color: #fff;
+        }
+
+        .listings {
+          height:100%;
+          overflow:auto;
+          padding-bottom:60px;
+        }
+
+        .listings .item {
+          display:block;
+          border-bottom:1px solid #eee;
+          padding:10px;
+          text-decoration:none;
+        }
+
+        .listings .item:last-child { border-bottom:none; }
+        .listings .item .title {
+          display:block;
+          color:#00853e;
+          font-weight:700;
+        }
+
+        .listings .item .title small { font-weight:400; }
+        .listings .item.active .title,
+        .listings .item .title:hover { color:#8cc63f; }
+        .listings .item.active {
+          background-color:#f8f8f8;
+        }
+        ::-webkit-scrollbar {
+          width:3px;
+          height:3px;
+          border-left:0;
+          background:rgba(0,0,0,0.1);
+        }
+        ::-webkit-scrollbar-track {
+          background:none;
+        }
+        ::-webkit-scrollbar-thumb {
+          background:#00853e;
+          border-radius:0;
+        }
+
+        .marker {
+          border: none;
+          cursor: pointer;
+          height: 20px;
+          width: 20px;
+          
+          
+        }
+
+        .clearfix { display:block; }
+        .clearfix:after {
+          content:'.';
+          display:block;
+          height:0;
+          clear:both;
+          visibility:hidden;
+        }
+
+        /* Marker tweaks */
+        .mapboxgl-popup {
+          padding-bottom: 50px;
+        }
+
+        .mapboxgl-popup-close-button {
+          display:none;
+        }
+        .mapboxgl-popup-content {
+          font:400 15px/22px 'Source Sans Pro', 'Helvetica Neue', Sans-serif;
+          padding:0;
+          width:180px;
+        }
+        .mapboxgl-popup-content-wrapper {
+          padding:1%;
+        }
+        .mapboxgl-popup-content h3 {
+          background:#91c949;
+          color:#fff;
+          margin:0;
+          display:block;
+          padding:10px;
+          border-radius:3px 3px 0 0;
+          font-weight:700;
+          margin-top:-15px;
+        }
+
+        .mapboxgl-popup-content h4 {
+          margin:0;
+          display:block;
+          padding: 10px 10px 10px 10px;
+          font-weight:400;
+        }
+
+        .mapboxgl-popup-content div {
+          padding:10px;
+        }
+
+        .mapboxgl-container .leaflet-marker-icon {
+          cursor:pointer;
+        }
+
+        .mapboxgl-popup-anchor-top > .mapboxgl-popup-content {
+          margin-top: 15px;
+        }
+
+        .mapboxgl-popup-anchor-top > .mapboxgl-popup-tip {
+          border-bottom-color: #91c949;
+        }
+        .listing-group {
+        font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+        font-weight: 600;
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1;
+        border-radius: 3px;
+        max-width: 20%;
+        color: #fff;
+    }
+    /* directions */
+    #inputs,
+#errors,
+#directions {
+	margin-top: 150px;
+    position: absolute;
+    width: 25%;
+    max-width: 300px;
+    min-width: 200px;
+}
+
+#inputs {
+    z-index: 10;
+    top: 10px;
+    left: 10px;
+}
+
+#directions {
+    z-index: 99;
+    background: rgba(0,45,0,.5);
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+#errors {
+    z-index: 8;
+    opacity: 0;
+    padding: 10px;
+    border-radius: 0 0 3px 3px;
+    background: rgba(0,0,0,.25);
+    top: 90px;
+    left: 10px;
+}
+
+    
+      </style>
+  </head>
+
+  <body>
+    <div class='sidebar'>
+    	
+      <div class='heading'>
+        <h1>Zonas históricas y arqueológicas</h1>
+      </div>
+    <div id='listings' class='listings'></div>
+    </div>
+    <div class="mapboxgl-ctrl mapboxgl-ctrl-group">
+  <button class="mapboxgl-ctrl-icon mapboxgl-ctrl-geolocate" 
+   type="button" aria-label="Geolocate"></button>
+</div>
+    <div id='map' class='map'> </div>
+    <div id='inputs'></div>
+<div id='errors'></div>
+<div id='directions'>
+  <div id='routes'></div>
+  <div id='instructions'><h1>Instrucciones</h1></div>
+</div>
+
+
+  <script>
+  // This will let you use the .remove() function later on
+  if (!('remove' in Element.prototype)) {
+    Element.prototype.remove = function() {
+      if (this.parentNode) {
+          this.parentNode.removeChild(this);
+      }
+    };
+  }
+
+ mapboxgl.accessToken = 'pk.eyJ1IjoiZGFubnlrYXRoIiwiYSI6InpQVFR4YnMifQ.75RM0RQILiSouwaJvaIq3g';
+var map = new mapboxgl.Map({
+    container: 'map', 
+    style: 'mapbox://styles/dannykath/cjpwk5ky226ld2sl3jmguaiuw', 
+    center: [-74.2258, -13.1591], 
+    zoom: 16,
+    scrollZoom: true
+  });
+var popup = new mapboxgl.Popup({ offset: 25 })
+    .setText('Usted esta aqui!');
+
+  var zones ={
+    "type": "FeatureCollection",
+    "generator": "JOSM",
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "name": "Templo San Cristóbal",
+                "building": "yes",
+                "religion": "christian",
+                "denomination": "catholic"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22727793589,
+                    -13.16801595146
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Monumento",
+                "name": "Pachacutec"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -73.95392581534,
+                    -13.65309122567
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "name": "Sr. De Maravillas",
+                "source": "Kaart Ground Survey 2017",
+                "addr:street": "Jirón Libertad",
+                "building": "yes",
+                "religion": "christian"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22757633097,
+                    -13.15053598311
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "source": "bing",
+                "building": "church",
+                "religion": "christian",
+                "denomination": "catholic"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -73.84186863966,
+                    -13.08945242274
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "roof:shape": "gabled",
+                "roof:colour": "red",
+                "building:levels": "2",
+                "roof:material": "eternit",
+                "building": "church",
+                "religion": "christian",
+                "denomination": "catholic",
+                "roof:levels": "1",
+                "building:colour": "brown"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -73.93275797635,
+                    -13.87965741466
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Monumento",
+                "name": "Christ Statue"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.23392110000,
+                    -12.92907930000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "memorial",
+                "name": "A los periodistas víctimas de la violencia política"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22595860000,
+                    -13.15280150000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Monumento",
+                "name": "Arco del Triunfo",
+                "tourism": "attraction"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22700490000,
+                    -13.16316010000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "addr:city": "Ayacucho",
+                "addr:postcode": "066",
+                "addr:street": "Jirón Cusco",
+                "historic": "Iglesia",
+                "denomination": "catholic",
+                "name": "Amargura",
+                "religion": "christian"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22101136012,
+                    -13.16068661188
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "addr:street": "San Lorenzo",
+                "historic": "Iglesia",
+                "name": "Centro Familiar Cristianu Emmanuel",
+                "religion": "christian",
+                "source": "Kaart Ground Survey 2017"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22466500000,
+                    -13.16491590000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Sitio arqueólogico",
+                "source": "ign.gob.pe"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.62888890000,
+                    -14.82194440000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "church",
+                "name": "Iglesia de Santa Ana",
+                "religion": "christian"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -73.93132230000,
+                    -13.74982940000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Sitio arqueólogico",
+                "name": "ushno"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -73.95517813069,
+                    -13.65273375505
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Sitio arqueólogico",
+                "source": "ign.gob.pe"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.02361110000,
+                    -12.63527780000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "description": "Church"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.10826190000,
+                    -13.21391690000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "name": "Templo y Convento de San Francisco de Asis",
+                "building": "yes",
+                "religion": "christian",
+                "denomination": "catholic"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22674551740,
+                    -13.16359824880
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Monumento",
+                "name": "Mariscal Sucre",
+                "name:es": "Plaza de Armas"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22573510000,
+                    -13.16042770000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Monumento",
+                "name": "Inca Pachacutec"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22352210000,
+                    -13.16392340000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "roof:shape": "gabled",
+                "building": "yes",
+                "religion": "christian",
+                "denomination": "catholic",
+                "name": "Basílica Catedral",
+                "roof:height": "1.90",
+                "height": "14"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22488004103,
+                    -13.16079192808
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Monumento",
+                "name": "Augusto B. Leguia"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.21799390000,
+                    -13.15543560000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "description": "church (christian)"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.32901100000,
+                    -12.85645980000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "name": "Capilla del Divino Niño",
+                "addr:street": "Vía de Los Libertadores",
+                "source": "Kaart Ground Survey 2017",
+                "building": "yes",
+                "religion": "christian"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.23379704490,
+                    -13.15296305055
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "building": "temple",
+                "denomination": "jehovahs_witness",
+                "religion": "christian"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.21376870000,
+                    -13.16354340000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "building": "chapel",
+                "denomination": "catholic",
+                "name": "Capilla Señor de los Milagros",
+                "opening_hours": "Sa-Su 00:00-24:00",
+                "religion": "christian",
+                "service_times": "Sa 10:00+"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.21708950000,
+                    -13.18161280000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "addr:street": "Santa Rosa de Lima",
+                "historic": "Iglesia",
+                "source": "Kaart Ground Survey 2017"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.21717870000,
+                    -13.15156470000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "name": "Iglesia",
+                "building": "yes",
+                "religion": "christian",
+                "denomination": "catholic"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -73.72759178415,
+                    -13.86001672083
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Sitio arqueólogico",
+                "name": "Zona Arqueologica de Conchopata"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.20781851351,
+                    -13.15631924327
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "denomination": "catholic",
+                "religion": "christian"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.20275910000,
+                    -13.17858680000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "memorial",
+                "name": "Para la Paz"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22793100000,
+                    -13.15012300000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "name": "Iglesia de Llauta"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.91991700000,
+                    -14.24348930000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "building": "yes",
+                "religion": "christian"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.12597090073,
+                    -13.09031128687
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "name": "Iglesia",
+                "religion": "christian"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.14646579509,
+                    -13.08200042441
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "roof:shape": "gabled",
+                "roof:material": "slate",
+                "building": "yes",
+                "religion": "christian",
+                "denomination": "catholic",
+                "name": "San Agustin",
+                "roof:height": "1.5",
+                "building:material": "plaster"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22464132443,
+                    -13.15991959847
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Sitio arqueólogico",
+                "source": "ign.gob.pe"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.34333330000,
+                    -13.69888890000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "name": "Iglesia Evangelica Pentecostal Del Perú"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.21307060000,
+                    -13.15476080000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Monumento",
+                "name": "Arco de la Alameda"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22727930000,
+                    -13.16893300000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "denomination": "catholic",
+                "name": "Templo Santa Ana",
+                "religion": "christian"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.23105850000,
+                    -13.17017000000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "religion": "christian",
+                "description": "Iglesia"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.28985119000,
+                    -13.21472145334
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Monumento",
+                "name": "Andrés Avelino Cáceres",
+                "building": "yes"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22110483117,
+                    -13.15791505751
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Campo de batalla",
+                "name": "Pampa de Ayacucho"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.12966540000,
+                    -13.04092670000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "addr:housenumber": "9-A",
+                "addr:street": "Portal Constitucion",
+                "historic": "Iglesia",
+                "name": "Iglesia VIDA NUEVA"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22669300000,
+                    -13.16040190000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Sitio arqueólogico",
+                "name": "Zona Arqueologica Waychaopanpa"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.23060656667,
+                    -13.17590701719
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Monumento"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.21880400000,
+                    -13.15867200000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "roof:shape": "gabled",
+                "roof:material": "slate",
+                "building": "yes",
+                "religion": "christian",
+                "denomination": "catholic",
+                "name": "Templo de Buena Muerte",
+                "roof:height": "1.5",
+                "building:material": "plaster"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22393992677,
+                    -13.16145923201
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "memorial",
+                "name": "Simón Bolivar"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22673400000,
+                    -13.14425150000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Monumento"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.21861260615,
+                    -13.16185074152
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Sitio arqueólogico",
+                "name": "Zona Arqueologica Muyo Orco",
+                "leisure": "common"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22318757117,
+                    -13.13861576767
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Sitio arqueólogico",
+                "name": "Mesasja Pampa",
+                "source": "ign.gob.pe"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.02611110000,
+                    -15.08500000000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "name": "Templo de la Magdalena",
+                "building": "yes",
+                "religion": "christian",
+                "denomination": "catholic"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22163188525,
+                    -13.15781972711
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Monumento"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.20760220000,
+                    -13.15776200000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "name": "Gruta del señor palacio de justicia",
+                "opening_hours": "24/7"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.23816450000,
+                    -13.13941150000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Sitio arqueólogico",
+                "source": "ign.gob.pe"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.31055560000,
+                    -13.81527780000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "religion": "spiritualist"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.20946300000,
+                    -13.16990790000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Sitio arqueólogico",
+                "source": "ign.gob.pe"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.27666670000,
+                    -12.65250000000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "roof:shape": "gabled",
+                "source": "local_knowledge",
+                "roof:material": "slate",
+                "building": "church",
+                "religion": "christian",
+                "name": "Templo La Merced",
+                "roof:height": "1.5",
+                "building:material": "plaster"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22538966075,
+                    -13.16254833080
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Monumento",
+                "landmark": "statue",
+                "name": "Busto de Dr. Luis Carranza Ayarza"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22608830000,
+                    -13.15833100000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "artwork_type": "statue",
+                "historic": "memorial"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.12415070000,
+                    -14.69399640000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "name": "Templo y Monasterio de Santa Teresa",
+                "building": "yes",
+                "denomination": "catholic",
+                "religion": "christian"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22774598137,
+                    -13.16793890678
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Sitio arqueólogico",
+                "source": "ign.gob.pe"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -73.34944440000,
+                    -15.21416670000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "addr:street": "Plaza de Armas",
+                "historic": "Iglesia",
+                "name": "Iglesia Matriz Pauza"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -73.34443650000,
+                    -15.27941570000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "name": "Templo y Monasterio de Santa Clara de Asís",
+                "addr:street": "Jirón F. Vivanco",
+                "building": "yes",
+                "addr:city": "Ayacucho",
+                "denomination": "catholic",
+                "religion": "christian"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22850638896,
+                    -13.16318559369
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Monumento",
+                "name": "María Parado de Bellido"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22509659203,
+                    -13.15452847528
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "addr:city": "Ayacucho",
+                "addr:street": "Jirón Jose Santos Chocano",
+                "historic": "Iglesia",
+                "name": "Templo La Hermosa",
+                "religion": "christian",
+                "source": "Kaart Ground Survey 2017"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.21909860000,
+                    -13.15660050000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Sitio arqueólogico",
+                "name": "Pucará",
+                "source": "ign.gob.pe"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -73.75583330000,
+                    -13.85222220000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "name": "Templo de San Francisco de Paula",
+                "building": "yes",
+                "religion": "christian"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22734365001,
+                    -13.15973416274
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "denomination": "evangelical",
+                "name": "Iglesia Cristiana Evangelica Las Asambleistas de Dios del Perú",
+                "religion": "christian"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.21318440000,
+                    -13.15350070000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "name": "Église",
+                "name:es": "Iglesia"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.12389350000,
+                    -14.69397270000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "name": "señor de la picota"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.24211350000,
+                    -13.15658260000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "name": "Templo del Arco",
+                "category": "temple",
+                "building": "church",
+                "religion": "christian",
+                "denomination": "catholic"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22502622142,
+                    -13.15419583785
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Monumento",
+                "name": "maria parado de bellido"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.62740947669,
+                    -13.55246944198
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "addr:street": "Avenida Carmel Alto",
+                "historic": "Iglesia",
+                "name": "Luz de Victoria",
+                "religion": "christian",
+                "source": "Kaart Ground Survey 2017"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22706770000,
+                    -13.17153620000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Sitio arqueólogico",
+                "source": "ign.gob.pe"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.59027780000,
+                    -13.56000000000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "denomination": "catholic",
+                "name": "Capilla Serñor del Huerto",
+                "religion": "christian"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22524050000,
+                    -13.13794190000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "name": "Templo El Calvario",
+                "building": "yes",
+                "religion": "christian"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22932379015,
+                    -13.15732348607
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Sitio arqueólogico",
+                "source": "ign.gob.pe"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.28305560000,
+                    -12.64277780000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Monumento"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.25290904663,
+                    -12.76611789764
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Sitio arqueólogico",
+                "name": "Pikimachay"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22838120000,
+                    -13.03861830000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "building": "yes",
+                "religion": "christian"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.62741792470,
+                    -13.55286968156
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "building": "yes",
+                "religion": "christian",
+                "denomination": "catholic",
+                "name": "Templo de Santo Domingo",
+                "height": "11",
+                "building:material": "plaster"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22548353806,
+                    -13.15840084955
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "denomination": "catholic",
+                "name": "Capilla Santa Rosa",
+                "religion": "christian"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.20981320000,
+                    -13.16867700000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "description": "Church"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.04614010000,
+                    -13.27990490000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Sitio arqueólogico",
+                "name": "Zona Arqueologica Vista Hermoza"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.20756102145,
+                    -13.14960680406
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "name": "Iglesia",
+                "religion": "christian",
+                "denomination": "catholic"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.17392075196,
+                    -13.01142570664
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Monumento",
+                "inscription:url": "http://es.wikipedia.org/wiki/Santuario_hist%C3%B3rico_de_la_Pampa_de_Ayacucho",
+                "memorial:type": "obelisk",
+                "name": "Santuario Histórico de la Pampa de Ayacucho"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.13142733684,
+                    -13.04240224228
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "addr:street": "Plaza principal",
+                "historic": "Iglesia",
+                "name": "Iglesia Católica de Ocros",
+                "religion": "christian"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -73.91512310000,
+                    -13.39119880000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Sitio arqueólogico",
+                "name": "Ayapata",
+                "source": "ign.gob.pe"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.59833330000,
+                    -14.84666670000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "name": "Templo y Convento de San Francisco de Asis",
+                "building": "yes",
+                "religion": "christian",
+                "denomination": "catholic"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22328077324,
+                    -13.16233416853
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "denomination": "catholic",
+                "name": "Capilla Señor de Arequipa",
+                "religion": "christian"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.21281712268,
+                    -13.16766121301
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "roof:shape": "gabled",
+                "name": "Templo de la Compañía de Jesús",
+                "roof:height": "1.5",
+                "roof:material": "slate",
+                "building": "yes",
+                "building:material": "plaster",
+                "denomination": "catholic",
+                "religion": "christian"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22688365117,
+                    -13.16114059787
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "addr:city": "Ayacucho",
+                "addr:street": "Jirón Jose Olaya",
+                "historic": "Iglesia",
+                "name": "Cristo Viviente",
+                "source": "Kaart Ground Survey 2017"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.23114620000,
+                    -13.15933420000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Sitio arqueólogico"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.19801520000,
+                    -13.06134200000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "addr:street": "Jirón Luis Carranza",
+                "source": "Kaart Ground Survey 2017",
+                "type": "multipolygon",
+                "building": "yes",
+                "religion": "christian"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.23081845313,
+                    -13.14669976723
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "name": "Cristo Redentor",
+                "religion": "christian",
+                "source": "Kaart Ground Survey 2017"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22792400000,
+                    -13.14472630000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Sitio arqueólogico",
+                "source": "ign.gob.pe"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.05000000000,
+                    -12.64416670000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "wayside_cross",
+                "name": "Pucacruz"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.23022100000,
+                    -13.16631050000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Monumento",
+                "name": "Andres Avelino Caceres"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.22591530000,
+                    -13.14956170000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Iglesia",
+                "description": "church (christian)"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.23992880000,
+                    -12.94061850000
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "historic": "Sitio arqueólogico",
+                "source": "ign.gob.pe"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -74.54333330000,
+                    -14.99833330000
+                ]
+            }
+        }
+    ]
+};
+ 
+  map.on('load', function (e) {
+
+    map.addSource("places", {
+      "type": "geojson",
+      "data": zones
+    });
+ 
+    buildLocationList(zones);
+
+  });
+
+  zones.features.forEach(function(marker, i) {
+ 
+    var el = document.createElement('div');
+    el.id = "marker-" + i;
+    el.className = 'marker';
+ 
+    new mapboxgl.Marker(el, {offset: [0, -23]})
+        .setLngLat(marker.geometry.coordinates)
+        .addTo(map);
+
+    el.addEventListener('click', function(e){
+ 
+        flyToStore(marker);
+        createPopUp(marker);
+        var activeItem = document.getElementsByClassName('active');
+        e.stopPropagation();
+        if (activeItem[0]) {
+           activeItem[0].classList.remove('active');
+        }
+
+        var listing = document.getElementById('listing-' + i);
+        listing.classList.add('active');
+
+    });
+  });
+
+
+  function flyToStore(currentFeature) {
+    map.flyTo({
+        center: currentFeature.geometry.coordinates,
+        zoom: 15
+      });
+  }
+
+  function createPopUp(currentFeature) {
+    var popUps = document.getElementsByClassName('mapboxgl-popup');
+    if (popUps[0]) popUps[0].remove();
+
+
+    var popup = new mapboxgl.Popup({closeOnClick: false})
+          .setLngLat(currentFeature.geometry.coordinates)
+          .setHTML('<h2>'+currentFeature.properties.historic+'</h2>' +
+            '<h3>' + currentFeature.properties.name + '</h3>')
+          .addTo(map);
+  }
+
+
+  function buildLocationList(data) {
+    for (i = 0; i < data.features.length; i++) {
+      var currentFeature = data.features[i];
+      var prop = currentFeature.properties;
+
+      var listings = document.getElementById('listings');
+      var listing = listings.appendChild(document.createElement('div'));
+      listing.className = 'item';
+      listing.id = "listing-" + i;
+
+      var link = listing.appendChild(document.createElement('a'));
+      link.href = '#';
+      link.className = 'title';
+      link.dataPosition = i;
+      link.innerHTML = prop.historic;
+
+      var details = listing.appendChild(document.createElement('div'));
+      details.innerHTML = prop.name;
+      
+      link.addEventListener('click', function(e){
+
+        var clickedListing = data.features[this.dataPosition];
+
+
+        flyToStore(clickedListing);
+
+
+        createPopUp(clickedListing);
+
+        var activeItem = document.getElementsByClassName('active');
+
+        if (activeItem[0]) {
+           activeItem[0].classList.remove('active');
+        }
+        this.parentNode.classList.add('active');
+
+      });
+    }
+  }
+  
+
+var el = document.createElement('div');
+el.id = 'marker';
+
+var geoLocate = new mapboxgl.GeolocateControl();
+
+map.addControl(geoLocate,'bottom-left');
+
+geoLocate.on('geolocate', function(e) {
+   map.flyTo({
+    center:[e.coords.longitude, e.coords.latitude], 
+    zoom:16  
+  });
+   new mapboxgl.Marker(el)
+    .setLngLat([e.coords.longitude, e.coords.latitude]) // user location
+    .setPopup(popup) 
+    .addTo(map);
+});
+
+
+  map.addControl(new MapboxDirections({
+    accessToken: mapboxgl.accessToken
+}), 'top-right');
+
+ 
+
+    </script>
+
+  </body>
+</html>
